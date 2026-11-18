@@ -1,0 +1,45 @@
+name: Gerar APK Android
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código do repositório
+        uses: actions/checkout@v4
+
+      - name: Descompactar projeto se enviado como ZIP pelo celular
+        run: |
+          if [ -f "insta_unfollowers_android_project.zip" ] && [ ! -f "settings.gradle" ]; then
+            unzip -o insta_unfollowers_android_project.zip
+          fi
+          for z in *.zip; do
+            if [ -f "$z" ] && [ ! -f "settings.gradle" ]; then
+              unzip -o "$z"
+            fi
+          done
+
+      - name: Configurar Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Configurar Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Compilar APK Debug
+        run: gradle assembleDebug --no-daemon
+
+      - name: Publicar APK para Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: InstaUnfollowers-APK
+          path: app/build/outputs/apk/debug/*.apk
